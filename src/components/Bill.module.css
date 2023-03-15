@@ -1,0 +1,56 @@
+.title {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.sections {
+    text-align: start;
+    padding: 0 20px;
+    margin-right: 25px;
+}
+
+.sections p {
+    color: #939298;
+    font-size: 14px;
+    margin-bottom: 10px;
+    margin-top: 25px;
+}
+
+.ResponsiveText:after {
+    content: "مبلغ شارژ (با احتساب مالیات بر ارزش افزوده)";
+}
+
+.sections div {
+    font-weight: bold;
+}
+
+@media screen and (max-width: 1000px) {
+    .ResponsiveText:after {
+        content: "مبلغ شارژ (+مالیات)";
+    }
+}
+
+@media screen and (max-width: 760px) {
+    .title {
+        display: none;
+    }
+
+    .sections {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 10px 0;
+        padding: 0;
+    }
+
+    .sections p {
+        margin: 0;
+        color: black;
+        font-size: 13px;
+    }
+
+    .sections div {
+        font-size: 13px;
+    }
+}
