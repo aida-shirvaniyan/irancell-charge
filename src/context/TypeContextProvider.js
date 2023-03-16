@@ -4,21 +4,25 @@ const initialState = {
     simType: "Credit",
     title: "اعتباری",
     disableIncredible: false,
-    maximum: "900,000",
+    maximum: 900000,
+    minimum: 10000,
     price: "20000",
-    incredible: false
+    incredible: false,
+    other: false,
 }
 
 const TypeReducer = (state, action) => {
     switch (action.type) {
         case "CONSTANT":
             return {
+                ...state,
                 simType: "Constant",
                 title: "دائمی",
                 disableIncredible: true,
-                maximum: "2,000,000",
+                maximum: 2000000,
                 price: "50000",
                 incredible: false,
+                other:false
             }
         case "CREDIT":
             return {
@@ -26,13 +30,25 @@ const TypeReducer = (state, action) => {
                 simType: "Credit",
                 title: "اعتباری",
                 disableIncredible: false,
-                maximum: "900,000",
-                incredible: false
+                maximum: 900000,
+                incredible: false,
+                other:false
             }
         case "CHOSEN":
             return {
                 ...state,
-                price: action.payload
+                price: action.payload,
+                other:false
+            }
+        case "WRITTEN":
+            return {
+                ...state,
+                price: action.payload,
+            }
+        case "OTHER":
+            return {
+                ...state,
+                other: true,
             }
         case "INCREDIBLE":
             return {

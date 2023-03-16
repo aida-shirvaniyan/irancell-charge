@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import styles from "./Shopping.module.css";
 import {TypeContext} from "../context/TypeContextProvider";
 import Bill from "./Bill";
@@ -11,33 +11,43 @@ const Shopping = () => {
         phoneNumber: "",
         email: "",
         bank: "",
-        default: 20000,
-        more: false,
         showBanks: false,
         error: false,
         shortage: false,
-        disable: false
+        disable: false,
+        dualChecking: false
     });
+    useEffect(() => {
+        Disable();
+    }, [data.disable, state.incredible])
+
     const changeHandler = event => {
         setData({...data, [event.target.name]: event.target.value})
     }
     const priceHandler = event => {
-        dispatch({type: "CHOSEN", payload: event.target.value})
+        dispatch({type: "WRITTEN", payload: event.target.value})
     }
     const setClass = price => {
-        if (state.price === price) {
+        if (state.price === price && state.other === false) {
             return styles.Active
         }
         return styles.priceInactive
     }
-    const SubmitHandler = () => {
-        if (data.phoneNumber.length === 11 && Number(state.price) >= 10000) {
-            setData({...data, error:false, shortage:false, showBanks: true , disable: true})
-        }else if(Number(state.price) <= 10000){
-            setData({...data, shortage :true})
+    const Disable = () => {
+        if (!!state.incredible || data.disable) {
+            setData({...data, dualChecking: true})
+        } else {
+            setData({...data, dualChecking: false})
         }
-        else {
-            setData({...data, error: true})
+    }
+    const SubmitHandler = () => {
+        const Price = Number(state.price);
+        if (data.phoneNumber.length === 11 && (Price >= state.minimum && Price <= state.maximum)) {
+            setData({...data, error: false, shortage: false, showBanks: true, disable: true})}
+        else if(data.phoneNumber.length < 11){
+            setData({...data, error: true })
+        }else {
+            setData({...data , error:false , shortage: true})
         }
     }
     const Reset = () => {
@@ -45,12 +55,11 @@ const Shopping = () => {
             phoneNumber: "",
             email: "",
             bank: "",
-            default: 20000,
-            more: false,
             showBanks: false,
             error: false,
             shortage: false,
-            disable: false
+            disable: false,
+            dualChecking: false
         })
     }
     return (
@@ -71,7 +80,7 @@ const Shopping = () => {
                     </div>
                     <div className={styles.ToggleContainer}>
                         <label className={styles.switch}>
-                            <input disabled={(state.disableIncredible , data.disable)} checked={state.incredible}
+                            <input disabled={state.disableIncredible} checked={state.incredible}
                                    name="incredible"
                                    type="checkbox" onChange={() => dispatch({type: "INCREDIBLE"})}/>
                             <span className={(!state.disableIncredible) ? styles.slider : styles.disable}></span>
@@ -79,20 +88,22 @@ const Shopping = () => {
                         {data.incredible}
                         شارژ شگفت انگیز
                     </div>
-                    <label className={styles.Label}>شارژ تلفن همراه</label>
-                    <input className={(data.error) ? styles.Error : styles.Input}
-                           maxLength="11"
-                           value={data.phoneNumber} name="phoneNumber"
-                           onChange={changeHandler} disabled={data.disable}
-                           type="text"
-                    />
+                    <div className={styles.inputContainer}>
+                        <input className={data.error ? styles.Error : styles.Input}
+                               maxLength="11" required
+                               value={data.phoneNumber} name="phoneNumber"
+                               onChange={changeHandler} disabled={data.disable}
+                               type="text"
+                        />
+                        <label>شارژ تلفن همراه</label>
+                    </div>
                     <div className={styles.priceButtonContainer}>
                         <h6>مبلغ شارژ</h6>
                         <div>
-                            <button className={setClass("10000")} disabled={(state.incredible, data.disable)}
+                            <button className={setClass("10000")} disabled={data.dualChecking}
                                     onClick={() => dispatch({type: "CHOSEN", payload: "10000"})}><b>10,000</b> ریال
                             </button>
-                            <button className={setClass("20000")} disabled={(state.incredible , data.disable)}
+                            <button className={setClass("20000")} disabled={data.dualChecking}
                                     onClick={() => dispatch({type: "CHOSEN", payload: "20000"})}><b>20,000</b> ریال
                             </button>
                             <button className={setClass("50000")} disabled={data.disable}
@@ -104,33 +115,39 @@ const Shopping = () => {
                             <button className={setClass("200000")} disabled={data.disable}
                                     onClick={() => dispatch({type: "CHOSEN", payload: "200000"})}><b>200,000</b> ریال
                             </button>
-                            <button className={(data.more) ? styles.Active : styles.priceInactive}
-                                    onClick={() => setData({...data, more: true})}
-                                    disabled={(state.incredible , data.disable)}>سایر مبالغ
+                            <button className={(state.other) ? styles.Active : styles.priceInactive}
+                                    onClick={() => dispatch({type: "OTHER"})}
+                                    disabled={data.dualChecking}>سایر مبالغ
                             </button>
                         </div>
                     </div>
-                    <div hidden={!data.more} className={styles.otherPrices}>
-                        <label className={styles.Label}>مبلغ شارژ به ریال</label>
-                        <input className={(data.shortage) ? styles.Error : styles.Input} value={state.price} name="price"
-                               onChange={priceHandler}
-                               type="text" disabled={data.disable}
-                        />
-                        <p className={data.shortage ? styles.errorMsg : styles.Hint}>حداقل 10,000 و حداکثر <span>{state.maximum.toLocaleString()}</span> ریال</p>
+                    <div hidden={!state.other} className={styles.otherPrices}>
+                        <div className={styles.inputContainer}>
+                            <input className={(data.shortage) ? styles.Error : styles.Input} value={(state.price)}
+                                   name="price" required onChange={priceHandler} type="text" disabled={data.disable}
+                            />
+                            <label>مبلغ شارژ به ریال</label>
+                        </div>
+                        <p className={data.shortage ? styles.errorMsg : styles.Hint}>حداقل <span>{state.minimum.toLocaleString()}</span> و
+                            حداکثر <span>{state.maximum.toLocaleString()}</span> ریال</p>
                     </div>
-                    <label className={styles.Label}>ایمیل ( اختیاری )</label>
-                    <input className={styles.Input} value={data.email} name="email" onChange={changeHandler}
-                           type="text" disabled={data.disable}
-                    />
+                    <div className={styles.inputContainer}>
+                        <input className={styles.Input} value={data.email} name="email" onChange={changeHandler}
+                               type="text" disabled={data.disable} required
+                        />
+                        <label>ایمیل ( اختیاری )</label>
+                    </div>
                     <div className={styles.MobileBillContainer}>
                         <Bill data={data}/>
                     </div>
                     <div hidden={!data.showBanks} className={styles.Banks}>
                         <h5>انتخاب بانک :</h5>
                         <button className={data.bank === "بانک ملت" ? styles.Selected : styles.notSelected}
-                                onClick={() => setData({...data, bank: "بانک ملت"})}><img src={Melat} alt="Bank"/></button>
+                                onClick={() => setData({...data, bank: "بانک ملت"})}><img src={Melat} alt="Bank"/>
+                        </button>
                         <button className={data.bank === "بانک پارسیان" ? styles.Selected : styles.notSelected}
-                                onClick={() => setData({...data, bank: "بانک پارسیان"})}><img src={Parsian} alt="Bank"/></button>
+                                onClick={() => setData({...data, bank: "بانک پارسیان"})}><img src={Parsian} alt="Bank"/>
+                        </button>
                     </div>
                     <button onClick={SubmitHandler} className={styles.Bank}>انتخاب بانک و پرداخت</button>
                     <button onClick={Reset} hidden={!data.showBanks} className={styles.cancel}>انصراف</button>
